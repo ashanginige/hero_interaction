@@ -1,0 +1,34 @@
+
+
+body{
+    background: linear-gradient(128.98deg, #2B185B 0%, #332655 100%);
+    overflow: hidden; /* Hide scrollbars */
+}
+
+
+#container {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+
+
+  .div {
+    position: absolute;
+    left: -24.65%;
+
+  }
+
+  svg{
+    opacity: .40;
+    filter: blur(24px);
+    border-inline: blur(1px);
+  }
+
+
+  
+  

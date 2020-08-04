@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.2/TweenMax.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.2/utils/Draggable.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.4/TweenMax.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.4/TweenMax.min.js"></script>
+
+
+
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <div id="container">
+        
+
+        <div class="div"> 
+            <svg width="1902" height="704" viewBox="0 0 1802 604" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M509.629 0C702.262 0 861.674 238.591 899.888 557.646L901.004 567.319L902.118 557.743C939.907 241.862 1096.51 4.82872 1286.54 0.0728677L1292.37 0H1802L1801.14 10.1405C1771.44 343.984 1609.94 598.808 1412.7 603.922L1406.65 604H395.35L389.362 603.923C192.111 598.861 30.5929 344.07 0.868575 10.2427L0 0H509.629ZM479.832 178.963H186.157L186.658 183.389C203.959 329.092 298.749 439.951 413.978 439.951H707.397L706.895 435.527C689.542 289.911 594.988 178.963 479.832 178.963ZM1615.84 178.963H1322.17L1318.68 178.997C1203.95 181.23 1110.39 293.642 1094.6 439.951H1388.02L1391.51 439.917C1506.32 437.685 1600.11 325.363 1615.84 178.963Z" fill="url(#paint0_linear)"/>
+            <defs>
+            <linearGradient id="paint0_linear" x1="1801.86" y1="4.20749e-05" x2="546.373" y2="603.788" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#00EBA6"/>
+            <stop offset="1" stop-color="#5F27ED" stop-opacity="0"/>
+            </linearGradient>
+            </defs>
+            </svg>
+        </div>
+
+ </div>
+
+
+      <script>
+          $("#container").mousemove(function(e) {
+  parallaxIt(e, "svg", -100);
+  parallaxIt(e, "img", -30);
+});
+
+function parallaxIt(e, target, movement) {
+  var $this = $("#container");
+  var relX = e.pageX - $this.offset().left;
+  var relY = e.pageY - $this.offset().top;
+
+  TweenMax.to(target, 1, {
+    x: (relX - $this.width() / 2) / $this.width() * movement,
+    y: (relY - $this.height() / 2) / $this.height() * movement
+  });
+
+
+
+  // Define an object that will be used to draw plus signs
+var Plus = function() {
+  this.x = 0;
+  this.y = 0;
+
+  this.top = 0;
+  this.left = 0;
+
+  this.height = 0;
+  this.width = 0;
+  this.scale = 1;
+};
+
+//Add draw method to the object
+Plus.prototype.draw = function(ctx, x, y) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.setTransform(
+    this.scale,
+    0,
+    0,
+    this.scale,
+    this.left + this.x,
+    this.top + this.y
+  );
+  ctx.lineWidth = 2;
+
+  ctx.moveTo(0, -this.height / 2);
+  ctx.lineTo(0, this.height / 2);
+
+  ctx.moveTo(-this.width / 2, 0);
+  ctx.lineTo(this.width / 2, 0);
+
+  ctx.stroke();
+  ctx.closePath();
+  ctx.restore();
+};
+
+var c = document.getElementById("c");
+var context = c.getContext("2d");
+var signs = [];
+var mouse = { x: 0, y: 0 };
+var gridLength = 9;
+var mouseOver = false;
+var mouseMoved = false;
+
+c.width = window.innerWidth;
+c.height = window.innerHeight;
+
+// Create sign grid using 2D array
+for (var i = 0; i < gridLength; i++) {
+  signs[i] = [];
+  for (var j = 0; j < gridLength; j++) {
+    var min = Math.min(c.width, c.height);
+    signs[i][j] = new Plus();
+    signs[i][j].left = c.width / (gridLength + 1) * (i + 1);
+    signs[i][j].top = c.height / (gridLength + 1) * (j + 1);
+    signs[i][j].width = min / 50;
+    signs[i][j].height = min / 50;
+  }
+}
+
+// Use GSAP ticker to call draw function on every frame that will draw signs to the canvas
+// You can use requestAnimationFrame as well
+TweenLite.ticker.addEventListener("tick", draw);
+
+function draw() {
+  context.clearRect(0, 0, c.width, c.height);
+
+  if (mouseOver && mouseMoved) {
+    calculateSigns();
+    mouseMoved = false;
+  }
+
+  for (var i = 0; i < gridLength; i++) {
+    for (var j = 0; j < gridLength; j++) {
+      var sign = signs[i][j];
+      sign.draw(context);
+    }
+  }
+}
+
+function calculateSigns() {
+  for (var i = 0; i < gridLength; i++) {
+    for (var j = 0; j < gridLength; j++) {
+      var sign = signs[i][j];
+      var hyp = Math.min(c.width, c.height) / (gridLength + 1) / 2;
+      var d = dist([sign.left, sign.top], [mouse.x, mouse.y]);
+      var ax = mouse.x - sign.left;
+      var ay = mouse.y - sign.top;
+      var angle = Math.atan2(ay, ax);
+      if (d < hyp + sign.width) {
+        hyp = d;
+        TweenMax.to(sign, 0.3, { scale: 2 });
+      } else {
+        TweenMax.to(sign, 0.3, { scale: 1 });
+      }
+
+      TweenMax.to(sign, 0.3, {
+        x: Math.cos(angle) * hyp,
+        y: Math.sin(angle) * hyp
+      });
+    }
+  }
+}
+
+c.addEventListener("mousemove", mouseMove);
+c.addEventListener("touchmove", mouseMove);
+
+function mouseMove(e) {
+  if (e.targetTouches && e.targetTouches[0]) {
+    e = e.targetTouches[0];
+  }
+  var rect = c.getBoundingClientRect();
+  mouse.x = e.clientX - rect.left;
+  mouse.y = e.clientY - rect.top;
+  mouseMoved = true;
+}
+
+c.addEventListener("mouseenter", function() {
+  mouseOver = true;
+});
+
+c.addEventListener("touchstart", function(e) {
+  mouseOver = true;
+  mouseMove(e);
+});
+
+c.addEventListener("mouseleave", mouseLeave);
+c.addEventListener("touchend", mouseLeave);
+
+function mouseLeave() {
+  mouseOver = false;
+
+  for (var i = 0; i < gridLength; i++) {
+    for (var j = 0; j < gridLength; j++) {
+      var sign = signs[i][j];
+      if (!mouseOver) {
+        TweenMax.to(sign, 0.3, { x: 0, y: 0, scale: 1 });
+      }
+    }
+  }
+}
+
+window.addEventListener("resize", function() {
+  c.width = window.innerWidth;
+  c.height = window.innerHeight;
+  for (var i = 0; i < gridLength; i++) {
+    for (var j = 0; j < gridLength; j++) {
+      var min = Math.min(c.width, c.height);
+      sign = signs[i][j];
+      sign.left = c.width / (gridLength + 1) * (i + 1);
+      sign.top = c.height / (gridLength + 1) * (j + 1);
+      sign.width = min / 50;
+      sign.height = min / 50;
+    }
+  }
+});
+
+function dist([x1, y1], [x2, y2]) {
+  var dx = x1 - x2;
+  var dy = y1 - y2;
+  return Math.sqrt(dx * dx + dy * dy) || 1;
+}
+
+
+
+}
+
+
+      </script>
+</body>
+</html>
